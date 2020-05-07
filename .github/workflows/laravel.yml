@@ -53,4 +53,4 @@ jobs:
       if: always()
       with:
         name: asuswrt-packages
-        path: /opt/
+        path: /opt/images
