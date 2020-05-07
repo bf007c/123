@@ -1,0 +1,56 @@
+name: Build asuswrt
+
+on: 
+  release:
+    types: [published]
+  push:
+    tags:
+    - 'v*'
+  #  branches: 
+  #    - master
+#  schedule:
+#    - cron: 0 8 * * 5
+  watch:
+    types: [started]
+
+jobs:
+  build:
+    runs-on: ubuntu-18.04
+    if: github.event.repository.owner.id == github.event.sender.id
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@master
+    - name: Initialization environment
+      env:
+        DEBIAN_FRONTEND: noninteractive
+      run: |
+        #sudo apt-get update
+        sudo apt-get install --no-install-recommends autoconf automake bash bison bzip2 diffutils file flex g++ gawk gcc-multilib gettext gperf groff-base libncurses-dev libexpat1-dev libslang2 libssl-dev libtool libxml-parser-perl make patch perl pkg-config python sed shtool tar texinfo unzip zlib1g zlib1g-dev
+        sudo apt-get install lib32stdc++6 lib32z1-dev
+        sudo apt-get --no-install-recommends install automake1.11
+        sudo apt-get install libelf-dev:i386 libelf1:i386
+        sudo apt-get --no-install-recommends install lib32z1-dev lib32stdc++6
+        #sudo apt-get install libncurses5 libncurses5-dev m4 bison gawk flex libstdc++-4.8-dev g++-multilib g++ gengetopt git gitk zlib1g-dev autoconf autopoint libtool shtool autogen mtd-utils intltool sharutils docbook-xsl-* libstdc++5 texinfo dos2unix xsltproc binutils u-boot-tools device-tree-compiler python qemu gperf liblzo2-dev uuid-dev build-essential lzma-dev liblzma-dev lzma patch cmake intltool libglib2.0-dev gtk-doc-tools libc6-i386 lib32stdc++6 lib32z1 libelf1:i386 lib32ncurses5 libc6-dev-i386
+    - name: Clone source code
+      run: |
+        git clone --depth=1 https://github.com/welldo/asuswrt-k2p.git /opt/asuswrt_k2p
+        #cd /opt/asuswrt_k2p/toolchain-mipsel
+        #mkdir -p toolchain-3.4.x
+        #wget https://github.com/hanwckf/padavan-toolchain/releases/download/v1.1/mipsel-linux-uclibc.tar.xz
+        #tar -xvf mipsel-linux-uclibc.tar.xz -C toolchain-3.4.x
+        mkdir -p /opt/images/
+    - name: Build Firmware
+      env:
+        TNAME: 
+      run: |
+        cd /opt/asuswrt_k2p
+        source ./set-env.sh
+        make RT-AC1200G+
+        sudo mv -f images/*.trx /opt/images/
+    - name : Upload packages
+      uses: actions/upload-artifact@master
+      if: always()
+      with:
+        name: asuswrt-packages
+        path: /opt/
